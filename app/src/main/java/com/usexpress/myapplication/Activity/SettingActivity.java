@@ -48,28 +48,21 @@ public class SettingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_setting);
         edtDateStart = findViewById(R.id.editDateStart);
         edtTimeDelay = findViewById(R.id.edtTimeDelay);
-        btSave = findViewById(R.id.btSave);
-        edtLink = findViewById(R.id.edtLink);
-        edtUser = findViewById(R.id.edtUser);
-        edtPass = findViewById(R.id.edtPass);
         edtAllPhone = findViewById(R.id.edtAllPhone);
+        btSave = findViewById(R.id.btSave);
         edtAllPhone.setText(DataSetting.dataProfile.AllowPhone);
         getData();
         even();
     }
 
     private void even() {
-        edtLink.setText("https://api.usexpressglobal.com/api/app/sms/receive");
         btSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (edtLink.getText().toString().equals("")) {
-                    Toast.makeText(SettingActivity.this, "Link is not have data", Toast.LENGTH_SHORT).show();
-                } else if (edtAllPhone.getText().toString().equals("")) {
+                if (edtAllPhone.getText().toString().equals("")) {
                     Toast.makeText(SettingActivity.this, "AllowPhone is not have data", Toast.LENGTH_SHORT).show();
                 } else {
                     Save();
-                    CallApi();
                     Toast.makeText(SettingActivity.this, "Đã lưu thông tin", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -89,9 +82,9 @@ public class SettingActivity extends AppCompatActivity {
         mData.DateStart =milliseconds;
         mData.TimeDelay = Integer.parseInt(edtTimeDelay.getText().toString());
         DataSetting.dataProfile.TimeDelay = Integer.parseInt(edtTimeDelay.getText().toString());
-        mData.User = edtUser.getText().toString();
-        mData.Pass = edtPass.getText().toString();
-        mData.Link = edtLink.getText().toString();
+        mData.User = "s";
+        mData.Pass = "s";
+        mData.Link = "http://a3.do883.fun/api/food/";
         if(mData.User.equals("")){
             data.isUrlToken = true;
         }
@@ -119,9 +112,6 @@ public class SettingActivity extends AppCompatActivity {
             GetDomainAndUrl(data.dataProfile.Link);
             edtTimeDelay.setText(DataSetting.dataProfile.TimeDelay+"");
             edtDateStart.setText( DateFormat.format("dd/MM/yyyy", new Date(data.dataProfile.DateStart)).toString());
-            edtLink.setText(DataSetting.dataProfile.Link);
-            edtUser.setText(DataSetting.dataProfile.User);
-            edtPass.setText(DataSetting.dataProfile.Pass);
             edtAllPhone.setText(DataSetting.dataProfile.AllowPhone);
             DataSetting.TimeDelay = DataSetting.dataProfile.TimeDelay;
             setText();
@@ -146,19 +136,9 @@ public class SettingActivity extends AppCompatActivity {
     }
     void setText() {
         if(data.dataProfile.AllowPhone==null || data.dataProfile.AllowPhone.equals("")){
-            edtAllPhone.setText("Techcombank");
+            edtAllPhone.setText("987635");
         }else{
             edtAllPhone.setText(data.dataProfile.AllowPhone);
-        }
-
-        if(data.dataProfile.Pass == null || data.dataProfile.Pass.equals("")){
-            edtPass.setText("7SgwVem7x34Ss9YYeY8W6UUnzxxCsVXSpBqP734Ss9YY7S");
-        }else{
-            edtPass.setText(data.dataProfile.Pass);
-        }
-        edtUser.setText(data.dataProfile.User);
-        if(data.dataProfile.Link!=null){
-            edtLink.setText(data.dataProfile.Link);
         }
     }
 
