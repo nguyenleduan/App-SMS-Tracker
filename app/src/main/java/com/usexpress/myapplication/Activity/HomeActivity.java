@@ -7,6 +7,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -18,6 +20,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
@@ -62,6 +65,7 @@ public class HomeActivity extends AppCompatActivity {
 
     Intent mServiceIntent;
     DataSetting data;
+    static String myPhoneNumber= "";
     public ListView lv;
     public Context context = HomeActivity.this;
     Button btResend, btSetting, btRefresh;
@@ -80,6 +84,20 @@ public class HomeActivity extends AppCompatActivity {
         btSetting = findViewById(R.id.btSetting);
         btRefresh = findViewById(R.id.refesh);
         onclick();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "1111111111111111111111111111");
+        }
+        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+        myPhoneNumber = tMgr.getLine1Number();
+        Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "1111111111111111111111111111- " + myPhoneNumber);
         ActivityCompat.requestPermissions(HomeActivity.this, new String[]{"android.permission.READ_SMS"}, REQUEST_CODE_ASK_PERMISSIONS);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.RECEIVE_SMS}, 1000);
@@ -206,8 +224,8 @@ public class HomeActivity extends AppCompatActivity {
                 final String body = cursor.getString(descriptionIndex);
                 Time time = new Time();
                 time.setToNow();
-                final String date = DateFormat.format("yyyy/MM/dd HH:mm:ss", new Date(cursor.getLong(dateSMS))).toString();
-                Log.d("TIME TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + phone, Long.toString(time.toMillis(false)));
+                final String date = DateFormat.format("HH:mm:ss dd/MM/yyyy", new Date(cursor.getLong(dateSMS))).toString();
+//                Log.d("TIME TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + phone, Long.toString(time.toMillis(false)));
                 /// TODO check phone add list
 //                DataSetting.dataProfile.AllowPhone = "teckcombank,111";
                 if (checkDataCache()) {
@@ -233,7 +251,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void checkSMS(boolean load) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
         Date date = new Date();
         String dateNow = formatter.format(date);
         if (DataSetting.arrayListSMS == null || DataSetting.arrayListSMS.size() == 0) {
@@ -296,11 +314,11 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void callApi(long id, String phone, String body, String dateSMS, String dateNow, boolean load) {
-        Log.d("Phone: --------------------------------- " + phone, "Call api home 291 " + body);
-        ApiV2.ApiService2.Push("09999999", phone, body, dateSMS).enqueue(new Callback<Boolean>() {
+
+        ApiV2.ApiService2.Push(""+myPhoneNumber, phone, body, dateSMS).enqueue(new Callback<Boolean>() {
             @Override
             public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                Log.d("--------Thành công-------",""+response.code());
+                Log.d("--------Thành công-*------" + myPhoneNumber,""+response.code());
                 if (response.code() == 200) {
                     checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
                     Toaster.toast("Đã gửi nội dung: ID:" + id + " [Phone: " + phone + "]");
