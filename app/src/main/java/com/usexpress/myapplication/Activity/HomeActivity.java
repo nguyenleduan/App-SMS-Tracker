@@ -65,7 +65,7 @@ public class HomeActivity extends AppCompatActivity {
 
     Intent mServiceIntent;
     DataSetting data;
-    static String myPhoneNumber= "";
+    static String myPhoneNumber = "";
     public ListView lv;
     public Context context = HomeActivity.this;
     Button btResend, btSetting, btRefresh;
@@ -93,11 +93,14 @@ public class HomeActivity extends AppCompatActivity {
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
 
-            Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "1111111111111111111111111111");
+            Log.d("Check SMSM", "1111111111111111111111111111");
+
+        } else {
+
+            Log.d("Check SMSM", "22222222222222222222222222222222");
+            TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+            myPhoneNumber = tMgr.getLine1Number();
         }
-        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-        myPhoneNumber = tMgr.getLine1Number();
-        Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "1111111111111111111111111111- " + myPhoneNumber);
         ActivityCompat.requestPermissions(HomeActivity.this, new String[]{"android.permission.READ_SMS"}, REQUEST_CODE_ASK_PERMISSIONS);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.RECEIVE_SMS}, 1000);
@@ -315,10 +318,10 @@ public class HomeActivity extends AppCompatActivity {
 
     public void callApi(long id, String phone, String body, String dateSMS, String dateNow, boolean load) {
 
-        ApiV2.ApiService2.Push(""+myPhoneNumber, phone, body, dateSMS).enqueue(new Callback<Boolean>() {
+        ApiV2.ApiService2.Push("" + myPhoneNumber, phone, body, dateSMS).enqueue(new Callback<Boolean>() {
             @Override
             public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                Log.d("--------Thành công-*------" + myPhoneNumber,""+response.code());
+                Log.d("--------Thành công-*------" + myPhoneNumber, "" + response.code());
                 if (response.code() == 200) {
                     checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
                     Toaster.toast("Đã gửi nội dung: ID:" + id + " [Phone: " + phone + "]");
@@ -335,7 +338,7 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Boolean> call, Throwable t) {
-                Log.d("--------Thất bại-------",""+ t);
+                Log.d("--------Thất bại-------", "" + t);
                 checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Error Api", false));
                 Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
                 if (load) {
@@ -421,6 +424,26 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        try {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }else{
+                TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+                myPhoneNumber = tMgr.getLine1Number();
+                Log.d("Check SMSM", "-------------"+myPhoneNumber);
+            }
+        } catch (Exception e) {
+
+
+
+        }
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
