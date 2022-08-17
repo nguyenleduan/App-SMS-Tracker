@@ -23,7 +23,7 @@ import retrofit2.http.Query;
 public interface GetTokenService {
     Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
     GetTokenService ApiService = new Retrofit.Builder()
-            .baseUrl("https://api.usexpressglobal.com/")
+            .baseUrl("https://srv.usexpress.vn/")
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build().create(GetTokenService.class);
     @FormUrlEncoded

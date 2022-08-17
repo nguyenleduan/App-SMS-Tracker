@@ -59,7 +59,7 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void even() {
-        edtLink.setText("https://api.usexpressglobal.com/api/app/sms/receive");
+        edtLink.setText("https://srv.usexpress.vn/api/app/sms/receive");
         btSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -146,13 +146,13 @@ public class SettingActivity extends AppCompatActivity {
     }
     void setText() {
         if(data.dataProfile.AllowPhone==null || data.dataProfile.AllowPhone.equals("")){
-            edtAllPhone.setText("Techcombank");
+            edtAllPhone.setText("Test");
         }else{
             edtAllPhone.setText(data.dataProfile.AllowPhone);
         }
 
         if(data.dataProfile.Pass == null || data.dataProfile.Pass.equals("")){
-            edtPass.setText("7SgwVem7x34Ss9YYeY8W6UUnzxxCsVXSpBqP734Ss9YY7S");
+            edtPass.setText("9xCx34SssP7em7VYY7SgwVXSpBqeY8");
         }else{
             edtPass.setText(data.dataProfile.Pass);
         }
