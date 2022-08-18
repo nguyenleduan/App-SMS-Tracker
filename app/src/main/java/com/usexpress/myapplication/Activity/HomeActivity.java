@@ -18,13 +18,13 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -42,14 +42,12 @@ import com.usexpress.myapplication.Restarter;
 import com.usexpress.myapplication.Service.CallApi;
 import com.usexpress.myapplication.Service.GetTokenService;
 import com.usexpress.myapplication.Serviced;
-import com.usexpress.myapplication.ToastHandler;
 
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,20 +55,20 @@ import retrofit2.Response;
 import xdroid.toaster.Toaster;
 
 public class HomeActivity extends AppCompatActivity {
-
     Intent mServiceIntent;
     DataSetting data;
     public ListView lv;
     public Context context = HomeActivity.this;
     Button btResend, btSetting,btRefresh;
     private Serviced mYourService;
-    static final String MY_PREFS_NAME = "MyPrefsFile";
 
     public static AdapterListView adapterListView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final int REQUEST_CODE_ASK_PERMISSIONS = 123;
+            SharedPreferences sharedPref =   this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+            DataSetting.Token = sharedPref.getString("KeyToken", "1");
         setContentView(R.layout.activity_home);
         lv = findViewById(R.id.lv);
         btResend = findViewById(R.id.btResend);
@@ -104,7 +102,8 @@ public class HomeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toaster.toast("Đang gửi lại SMS fail");
                 ContentResolver cr = getContentResolver();
-                getSMS(cr,true);
+//                getSMS(cr,true,true);
+                checkFail(true);
             }
         });
         btRefresh.setOnClickListener(new View.OnClickListener() {
@@ -138,7 +137,7 @@ public class HomeActivity extends AppCompatActivity {
         return DataSetting.arrayListData;
     }
     public void getCache() {
-        SharedPreferences sharedPref = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences sharedPref = getSharedPreferences("MyPrefsFile", MODE_PRIVATE);
         Gson gson = new Gson();
         String jsonModel = sharedPref.getString("DataKey", null);
         String jsonArr = sharedPref.getString("arrDataKey", null);
@@ -161,9 +160,9 @@ public class HomeActivity extends AppCompatActivity {
             lv.setAdapter(adapterListView);
             adapterListView.notifyDataSetChanged();
         }
-        Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+        Log.d("Get cache : ", "arrayListData: "+DataSetting.arrayListData.size());
         ContentResolver cr = getContentResolver();
-        getSMS(cr,true);
+//        getSMS(cr,true,true);
 //        Login();
     }
     public boolean checkDataCache(){
@@ -174,14 +173,14 @@ public class HomeActivity extends AppCompatActivity {
         return true;
     }
 
-    public void getSMS(ContentResolver cr,boolean load) {
+    public ArrayList<SMSModel> getSMS(ContentResolver cr,boolean load,boolean isSend) {
         Uri inboxURI = Uri.parse("content://sms/inbox");
         String[] reqCols = new String[]{"_id", "address", "body", "date"};
 //        ContentResolver cr = getContentResolver();
         Cursor cursor = cr.query(inboxURI, reqCols, null, null, null);
         DataSetting.arrayListSMS.clear();
         if (!cursor.moveToFirst()) {
-            return;
+            return null;
         }
         try {
             final int idIndex = cursor.getColumnIndex("_id");
@@ -190,6 +189,7 @@ public class HomeActivity extends AppCompatActivity {
             final int dateSMS = cursor.getColumnIndex("date");
             //TODO ??
             if (!cursor.moveToFirst()) {
+                return  DataSetting.arrayListSMS;
             }
             DataSetting.arrayListSMS.clear();
             //
@@ -200,21 +200,14 @@ public class HomeActivity extends AppCompatActivity {
                 Time time = new Time();
                 time.setToNow();
                 final String date = DateFormat.format("yyyy/MM/dd HH:mm:ss", new Date(cursor.getLong(dateSMS))).toString();
-                Log.d("TIME TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "+phone, Long.toString(time.toMillis(false)));
                 /// TODO check phone add list
-//                DataSetting.dataProfile.AllowPhone = "teckcombank,111";
                 if (checkDataCache()) {
                     String[] list = DataSetting.dataProfile.AllowPhone.split(",");
-                    Log.d("Check list zise:", list.length+"");
                     for (int i = 0; i < list.length; i++) {
                         if (phone.contains(list[i]) && cursor.getLong(dateSMS) > DataSetting.dataProfile.DateStart) {
                             DataSetting.arrayListSMS.add(new SMSModel(id, phone, body, date));
-                            //TODO check
-                            Log.d("phone:", phone);
-                            Log.d("body", body);
-                            Log.d("date", date);
-                            Log.d("list length", DataSetting.arrayListSMS.size() + "");
-                            Log.d("-------------------------", "-------------------------");
+                            Log.d("SMS: ----------", " Phone: "+phone+ "    Body"+body);
+
                         }
                     }
                 }
@@ -222,9 +215,12 @@ public class HomeActivity extends AppCompatActivity {
         } finally {
             cursor.close();
         }
-        checkSMS(load);
+        if(isSend){
+            if(DataSetting.arrayListSMS.size()>DataSetting.arrayListData.size())
+            checkSMS(load);
+        }
+        return DataSetting.arrayListSMS;
     }
-
     public void checkSMS(boolean load) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
@@ -234,22 +230,23 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             for(int i = 0; i<DataSetting.arrayListSMS.size();i++){
                 if(checkNew(DataSetting.arrayListSMS.get(i).getID())){
-                    callApi(DataSetting.arrayListSMS.get(i).getID(),
+                    CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
+                    completableFuture.complete(callApi(DataSetting.arrayListSMS.get(i).getID(),
                             DataSetting.arrayListSMS.get(i).getPhone(),
                             DataSetting.arrayListSMS.get(i).getBody(),
-                            DataSetting.arrayListSMS.get(i).getDate(),dateNow,load);
+                            DataSetting.arrayListSMS.get(i).getDate(),dateNow,load,true));
                 }
             }
             checkFail(load);
         }
     }
 
-    public boolean checkNew(long id) {
+    public boolean checkNew(long id ) {
         if(DataSetting.arrayListData == null || DataSetting.arrayListData.size() == 0) {
             return true;
         } else {
             for (int i = 0; i < DataSetting.arrayListData.size(); i++) {
-                if (DataSetting.arrayListData.get(i).getID() == id) {
+                if (DataSetting.arrayListData.get(i).getID() == id ) {
                     return false;
                 }
             }
@@ -262,19 +259,19 @@ public class HomeActivity extends AppCompatActivity {
         String dateNow = formatter.format(date);
         for (int i = 0; i < DataSetting.arrayListData.size(); i++) {
             if (!DataSetting.arrayListData.get(i).isSucceeded()) {
-                callApi(DataSetting.arrayListData.get(i).getID(),
-                        DataSetting.arrayListData.get(i).getPhone(),
-                        DataSetting.arrayListData.get(i).getMessage(),
-                        DataSetting.arrayListData.get(i).getDate_SMSArrived(),
-                        dateNow,load);
+                CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
+                completableFuture.complete(callApi(DataSetting.arrayListSMS.get(i).getID(),
+                        DataSetting.arrayListSMS.get(i).getPhone(),
+                        DataSetting.arrayListSMS.get(i).getBody(),
+                        DataSetting.arrayListSMS.get(i).getDate(),dateNow,load,false));
             }
         }
     }
-    public void checkSaveCache(ItemModel model){
+    public void checkSaveCache(ItemModel model ){
         if(DataSetting.arrayListData.size()==0){
             data.arrayListData.add(model);
         }else {
-            if(checkNew(model.getID())){
+            if(checkNew(model.getID() )){
                 data.arrayListData.add(model);
             }else{
                 for(int i=0; i<DataSetting.arrayListData.size();i++){
@@ -285,6 +282,22 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
     }
+    static final String MY_PREFS_NAME = "MyPrefsFile";
+    Boolean saveCache(){
+        try {
+            SharedPreferences mPrefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor prefsEditor = mPrefs.edit();
+            Gson gson = new Gson();
+            String json = gson.toJson(DataSetting.arrayListData);
+            prefsEditor.putString("arrDataKey", json);
+            prefsEditor.apply();
+            return true;
+        }catch (Exception e){
+            Log.d("Cache ERROR : " , "---------------------- "+e);
+        }
+        Log.d("Save cache done : " , " zise arrayListData: "+DataSetting.arrayListData.size()+" - arrayListSMS:   "+DataSetting.arrayListSMS.size());
+        return true;
+    }
     public Boolean checkDouble(long index){
         for(int i =0 ;i< DataSetting.arrayListData.size();i++){
             if(DataSetting.arrayListData.get(i).getID() == index && DataSetting.arrayListData.get(i).isSucceeded()){
@@ -294,10 +307,10 @@ public class HomeActivity extends AppCompatActivity {
         }
         return  true;
     }
-    public Boolean callApi(long id, String phone, String body, String dateSMS, String dateNow,boolean load) {
+    public Boolean callApi(long id, String phone, String body, String dateSMS, String dateNow,boolean load,boolean isSave) {
         bodyModel model = new bodyModel(phone, body, dateSMS);
         if(checkDouble(id)){
-            Log.d("Call Api:  " , phone+"---- body: "+ body);
+            Log.d("Call Api :  " , "----Click---------"+phone+"---- body: "+ body);
             CallApi.apiService.PostSMS(data.UrlApi, model).enqueue(new Callback<ApiRequet>() {
                 @Override
                 public void onResponse(Call<ApiRequet> call, Response<ApiRequet> response) {

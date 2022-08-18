@@ -14,7 +14,7 @@ import java.util.List;
 
 public class DataSetting {
     public static DataModel dataProfile = new DataModel();
-    public static String Token = "12312";
+    public static String Token = "1";
     public static String DoMain = "";
     public static String UrlApi = "";
     public static int TimeDelay = 20;

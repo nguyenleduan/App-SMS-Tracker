@@ -170,8 +170,12 @@ public class SettingActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<TokenModel> call, Response<TokenModel> response) {
                         if(response.code()==200){
-                            data.Token = response.body().access_token;
+                            DataSetting.Token = response.body().access_token;
                             data.isUrlToken=false;
+                            SharedPreferences mPrefs = SettingActivity.this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+                            SharedPreferences.Editor prefsEditor = mPrefs.edit();
+                            prefsEditor.putString("KeyToken", DataSetting.Token);
+                            prefsEditor.apply();
                             DialogS("Đăng nhập thành công");
                         }else{
                             DialogS("Đăng nhập thất bại");
