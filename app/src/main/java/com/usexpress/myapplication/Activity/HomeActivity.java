@@ -99,7 +99,7 @@ public class HomeActivity extends AppCompatActivity {
 
             Log.d("Check SMSM", "22222222222222222222222222222222");
             TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-            myPhoneNumber = tMgr.getLine1Number();
+            DataSetting.myPhoneNumber = tMgr.getLine1Number();
         }
         ActivityCompat.requestPermissions(HomeActivity.this, new String[]{"android.permission.READ_SMS"}, REQUEST_CODE_ASK_PERMISSIONS);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
@@ -168,7 +168,7 @@ public class HomeActivity extends AppCompatActivity {
         SharedPreferences sharedPref = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         Gson gson = new Gson();
         String jsonModel = sharedPref.getString("DataKey", null);
-        String jsonArr = sharedPref.getString("arrDataKey", null);
+        String jsonArr = sharedPref.getString(DataSetting.KeySMS, null);
         data.isUrlToken = sharedPref.getBoolean("UrlTokenKey", false);
         if (jsonModel != null) {
             DataModel datas = gson.fromJson(jsonModel, DataModel.class);

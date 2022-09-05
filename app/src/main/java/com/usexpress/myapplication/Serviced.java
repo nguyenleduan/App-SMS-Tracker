@@ -27,8 +27,10 @@ import com.usexpress.myapplication.Model.ApiRequet;
 import com.usexpress.myapplication.Model.DataModel;
 import com.usexpress.myapplication.Model.ItemModel;
 import com.usexpress.myapplication.Model.bodyModel;
+import com.usexpress.myapplication.Service.ApiV2;
 import com.usexpress.myapplication.Service.CallApi;
 import com.usexpress.myapplication.Service.CallApiToken;
+import com.usexpress.myapplication.Service.GetSMS;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,11 +47,11 @@ public class Serviced extends Service {
     public static int counterSave = 0;
     private int countTime = DataSetting.TimeDelay;
     private int countSaveTime = 1;
-    DataSetting data;
-
+    static final String MY_PREFS_NAME = "MyPrefsFile";
     HomeActivity homeActivity = new HomeActivity();
     private Timer timer, timerSave;
     private TimerTask timerTask;
+    GetSMS SMS = new GetSMS();
     @Override
     public void onCreate() {
         super.onCreate();
@@ -64,28 +66,66 @@ public class Serviced extends Service {
         timerTask = new TimerTask() {
             public void run() {
                 if (counter == DataSetting.TimeDelay) {
-                    homeActivity.getSMS(cr,false);
-                    timer.cancel();
+                    SMS.readSMS(cr);
+                    pushSMS();
                     counter = 0;
                     Save();
                     Toaster.toast("App SMS running...");
+                    timer.cancel();
                     startTimerCallApi();
                 }
                 Log.i("Count", "=========  " + counter);
                 counter++;
             }
         };
-        timer.schedule(timerTask, 10000, 10000); //
+        timer.schedule(timerTask, 1000, 1000); //
     }
-    static final String MY_PREFS_NAME = "MyPrefsFile";
+
+
+    void pushSMS(){
+        if(DataSetting.arraySMSMain!=null && DataSetting.arraySMSMain.size() >0)
+        for(int i = 0 ;i<DataSetting.arraySMSMain.size();i++){
+            if(DataSetting.arraySMSMain.get(i).arrSMS!=null && DataSetting.arraySMSMain.get(i).arrSMS.size()>0){
+                for(int x = 0 ;x <DataSetting.arraySMSMain.get(i).arrSMS.size();x++){
+                    if(!DataSetting.arraySMSMain.get(i).arrSMS.get(x).isSucceeded()){
+                        callApi(DataSetting.arraySMSMain.get(i).arrSMS.get(x).getID(),DataSetting.arraySMSMain.get(i).arrSMS.get(x).getPhone(),DataSetting.arraySMSMain.get(i).arrSMS.get(x).getMessage(),
+                                DataSetting.arraySMSMain.get(i).arrSMS.get(x).getDate_SMSArrived(),i,x);
+                    }
+                }
+            }
+        }
+        Save();
+    }
+    public void callApi(long id, String phone, String body, String dateSMS,int i,int x) {
+        ApiV2.ApiService2.Push("" + DataSetting.myPhoneNumber, phone, body, dateSMS).enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                Log.d("--------Thành công-*------" + DataSetting.myPhoneNumber, "" + response.code());
+                if (response.code() == 200) {
+                    Toaster.toast("Đã gửi nội dung: ID:" + id + " [Phone: " + phone + "]");
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setSucceeded(true);
+                } else {
+                    Toaster.toast("Gửi Thông tin thất bại:  ID:" + id + "  " + response.code() + " --- [Phone: " + phone + "]");
+                }
+            }
+            @Override
+            public void onFailure(Call<Boolean> call, Throwable t) {
+                Log.d("--------Thất bại-------", "" + t);
+                Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
+                DataSetting.arraySMSMain.get(i).arrSMS.get(x).setDate_CallSuccessful("Api: ERROR");
+            }
+        });
+    }
+
 
     void Save() {
         SharedPreferences mPrefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
         Gson gson = new Gson();
-        String json = gson.toJson(DataSetting.arrayListData);
-        prefsEditor.putString("arrDataKey", json);
+        String json = gson.toJson(DataSetting.arraySMSMain);
+        prefsEditor.putString(DataSetting.KeySMS, json);
         prefsEditor.apply();
+        Log.d("Save cache SMS", "----------Save cache success");
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
