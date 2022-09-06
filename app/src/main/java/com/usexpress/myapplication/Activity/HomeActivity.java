@@ -101,8 +101,6 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toaster.toast("Đang gửi lại SMS fail");
-                ContentResolver cr = getContentResolver();
-//                getSMS(cr,true,true);
                 checkFail(true);
             }
         });
@@ -230,11 +228,10 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             for(int i = 0; i<DataSetting.arrayListSMS.size();i++){
                 if(checkNew(DataSetting.arrayListSMS.get(i).getID())){
-                    CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
-                    completableFuture.complete(callApi(DataSetting.arrayListSMS.get(i).getID(),
+                    callApi(DataSetting.arrayListSMS.get(i).getID(),
                             DataSetting.arrayListSMS.get(i).getPhone(),
                             DataSetting.arrayListSMS.get(i).getBody(),
-                            DataSetting.arrayListSMS.get(i).getDate(),dateNow,load,true));
+                            DataSetting.arrayListSMS.get(i).getDate(),dateNow,load,true);
                 }
             }
             checkFail(load);
@@ -259,11 +256,11 @@ public class HomeActivity extends AppCompatActivity {
         String dateNow = formatter.format(date);
         for (int i = 0; i < DataSetting.arrayListData.size(); i++) {
             if (!DataSetting.arrayListData.get(i).isSucceeded()) {
-                CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
-                completableFuture.complete(callApi(DataSetting.arrayListSMS.get(i).getID(),
+                callApi(DataSetting.arrayListSMS.get(i).getID(),
                         DataSetting.arrayListSMS.get(i).getPhone(),
                         DataSetting.arrayListSMS.get(i).getBody(),
-                        DataSetting.arrayListSMS.get(i).getDate(),dateNow,load,false));
+                        DataSetting.arrayListSMS.get(i).getDate(),dateNow,load,false);
+                String a = "";
             }
         }
     }
@@ -277,6 +274,7 @@ public class HomeActivity extends AppCompatActivity {
                 for(int i=0; i<DataSetting.arrayListData.size();i++){
                     if(DataSetting.arrayListData.get(i).getID() == model.getID()){
                         data.arrayListData.get(i).setSucceeded(model.isSucceeded());
+                        data.arrayListData.get(i).setDate_CallSuccessful(model.getDate_CallSuccessful());
                     }
                 }
             }
@@ -307,44 +305,58 @@ public class HomeActivity extends AppCompatActivity {
         }
         return  true;
     }
-    public Boolean callApi(long id, String phone, String body, String dateSMS, String dateNow,boolean load,boolean isSave) {
-        bodyModel model = new bodyModel(phone, body, dateSMS);
-        if(checkDouble(id)){
-            Log.d("Call Api :  " , "----Click---------"+phone+"---- body: "+ body);
-            CallApi.apiService.PostSMS(data.UrlApi, model).enqueue(new Callback<ApiRequet>() {
-                @Override
-                public void onResponse(Call<ApiRequet> call, Response<ApiRequet> response) {
-                    if (response.code() == 200) {
-                        checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
-                        Toaster.toast("Đã gửi nội dung: ID:"+id+" [Phone: " + phone + "]");
 
-                    } else {
-                        checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Gửi Api fail " + response.code(), false));
-                        Toaster.toast("Gửi Thông tin thất bại:  ID:"+id+"  " + response.code() + " --- [Phone: " + phone + "]");
+    public Boolean callApi(long id, String phone, String body, String dateSMS, String dateNow,boolean load,boolean isSave) {
+
+        try {
+            bodyModel model = new bodyModel(phone, body, dateSMS);
+            if(checkDouble(id)){
+                Log.d("Call Api :  " , "----Click---------"+phone+"---- body: "+ body);
+                CallApi.apiService.PostSMS(data.UrlApi, model).enqueue(new Callback<ApiRequet>() {
+                    @Override
+                    public void onResponse(Call<ApiRequet> call, Response<ApiRequet> response) {
+                        if (response.code() == 200) {
+                            if(response.body().Code==0){
+                                checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
+                                Toaster.toast("Đã gửi nội dung: ID:"+id+" [Phone: " + phone + "]");
+                            }else{
+                                checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Code api:" + response.body().Code+"", false));
+                                Toaster.toast("Gửi Thông tin thất bại:  ID:"+id+"  " + response.code() + " --- [Phone: " + phone + "]");
+                            }
+                        } else {
+                            checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Gửi Api fail " + response.code(), false));
+                            Toaster.toast("Gửi Thông tin thất bại:  ID:"+id+"  " + response.code() + " --- [Phone: " + phone + "]");
+                        }
+                        if(load){
+                            adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
+                            lv.setAdapter(adapterListView);
+                            adapterListView.notifyDataSetChanged();
+                        }
+                        saveCache();
+                        return ;
                     }
-                    if(load){
-                        adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
-                        lv.setAdapter(adapterListView);
-                        adapterListView.notifyDataSetChanged();
-                    }return ;
-                }
-                @Override
-                public void onFailure(Call<ApiRequet> call, Throwable t) {
-                    checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Error Api", false));
-                    Toaster.toast("Gửi Thông tin thất bại: ID: "+id+ "  [Phone: " + phone + "]");
-                    if(load){
-                        adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
-                        lv.setAdapter(adapterListView);
-                        adapterListView.notifyDataSetChanged();
+                    @Override
+                    public void onFailure(Call<ApiRequet> call, Throwable t) {
+                        checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Error Api", false));
+                        Toaster.toast("Gửi Thông tin thất bại: ID: "+id+ "  [Phone: " + phone + "]");
+                        if(load){
+                            adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
+                            lv.setAdapter(adapterListView);
+                            adapterListView.notifyDataSetChanged();
+                        }
+                        saveCache();
                     }
-                }
-            });
+                });
+            }
+            if(load){
+                adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
+                lv.setAdapter(adapterListView);
+                adapterListView.notifyDataSetChanged();
+            }
+        }catch (Exception e){
+            Toaster.toast("Api ERROR");
         }
-        if(load){
-            adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
-            lv.setAdapter(adapterListView);
-            adapterListView.notifyDataSetChanged();
-        }
+
         return true ;
 
     }

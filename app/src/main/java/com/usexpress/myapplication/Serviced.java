@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -82,7 +83,7 @@ public class Serviced extends Service {
                 counter++;
             }
         };
-        timer.schedule(timerTask, 10000, 10000); //
+        timer.schedule(timerTask, 60000, 60000); //
     }
 
     public void getSMS(ContentResolver cr ) {
@@ -194,6 +195,7 @@ public class Serviced extends Service {
                 for(int i=0; i<DataSetting.arrayListData.size();i++){
                     if(DataSetting.arrayListData.get(i).getID() == model.getID()){
                         DataSetting.arrayListData.get(i).setSucceeded(model.isSucceeded());
+                        DataSetting.arrayListData.get(i).setDate_CallSuccessful(model.getDate_CallSuccessful());
                     }
                 }
             }
@@ -223,6 +225,8 @@ public class Serviced extends Service {
         return  true;
     }
     public Boolean callApi(long id, String phone, String body, String dateSMS, String dateNow ) {
+        try {
+
         bodyModel model = new bodyModel(phone, body, dateSMS);
         if(checkDouble(id)){
             Log.d("Call Api:  " , "-------------------"+phone+"  body: "+ body);
@@ -230,9 +234,13 @@ public class Serviced extends Service {
                 @Override
                 public void onResponse(Call<ApiRequet> call, Response<ApiRequet> response) {
                     if (response.code() == 200) {
-                        checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
-                        Toaster.toast("Đã gửi nội dung: ID:"+id+" [Phone: " + phone + "]");
-
+                        if(response.body().Code==0){
+                            checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
+                            Toaster.toast("Đã gửi nội dung: ID:"+id+" [Phone: " + phone + "]");
+                        }else{
+                            checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Code api:" + response.body().Code+"", false));
+                            Toaster.toast("Gửi Thông tin thất bại:  ID:"+id+"  " + response.code() + " --- [Phone: " + phone + "]");
+                        }
                     } else {
                         checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Gửi Api fail " + response.code(), false));
                         Toaster.toast("Gửi Thông tin thất bại:  ID:"+id+"  " + response.code() + " --- [Phone: " + phone + "]");
@@ -245,6 +253,9 @@ public class Serviced extends Service {
 
                 }
             });
+        }
+        }catch (Exception e){
+            Toaster.toast("Api ERROR");
         }
         return true ;
 
