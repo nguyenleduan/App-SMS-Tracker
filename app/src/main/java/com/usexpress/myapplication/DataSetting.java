@@ -28,4 +28,9 @@ public class DataSetting {
     public static ArrayList<String> arrayContentSendSMS = new ArrayList<>();
     public static ArrayList<MainSMS> arraySMSMain = new ArrayList<>();
     public static ArrayList<ItemModel> arrayListData = new ArrayList<>();
+    public  void setValueArrMainSMS(int index,MainSMS model){
+        if(model!=null){
+            DataSetting.arraySMSMain.set(index,model);
+        }
+    }
 }

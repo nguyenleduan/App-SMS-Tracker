@@ -32,4 +32,60 @@ public class MainSMS {
         }
         return null;
     }
+
+    public ArrayList<ItemModel> getArrSMS() {
+        return arrSMS;
+    }
+
+    public void setArrSMS(ArrayList<ItemModel> arrSMS) {
+        this.arrSMS = arrSMS;
+    }
+
+    public boolean isSendSMS() {
+        return isSendSMS;
+    }
+
+    public void setSendSMS(boolean sendSMS) {
+        isSendSMS = sendSMS;
+    }
+
+    public String getContent() {
+        return Content;
+    }
+
+    public void setContent(String content) {
+        Content = content;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getTimeStartTracker() {
+        return timeStartTracker;
+    }
+
+    public void setTimeStartTracker(String timeStartTracker) {
+        this.timeStartTracker = timeStartTracker;
+    }
+
+    public String getTimeEndTracker() {
+        return timeEndTracker;
+    }
+
+    public void setTimeEndTracker(String timeEndTracker) {
+        this.timeEndTracker = timeEndTracker;
+    }
 }

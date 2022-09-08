@@ -7,8 +7,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -27,33 +25,25 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.ResponseBody;
 import com.usexpress.myapplication.Adapter.AdapterListView;
 import com.usexpress.myapplication.DataSetting;
-import com.usexpress.myapplication.Model.ApiRequet;
 import com.usexpress.myapplication.Model.DataModel;
 import com.usexpress.myapplication.Model.ItemModel;
 import com.usexpress.myapplication.Model.SMSModel;
 import com.usexpress.myapplication.Model.TokenModel;
-import com.usexpress.myapplication.Model.bodyModel;
 import com.usexpress.myapplication.R;
 import com.usexpress.myapplication.Restarter;
 import com.usexpress.myapplication.Service.ApiV2;
-import com.usexpress.myapplication.Service.CallApi;
 import com.usexpress.myapplication.Service.GetTokenService;
 import com.usexpress.myapplication.Serviced;
-import com.usexpress.myapplication.ToastHandler;
 
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 
 import retrofit2.Call;
@@ -119,7 +109,7 @@ public class HomeActivity extends AppCompatActivity {
         btSetting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, SettingActivity.class);
+                Intent intent = new Intent(HomeActivity.this, DashboardActivity.class);
                 startActivity(intent);
             }
         });

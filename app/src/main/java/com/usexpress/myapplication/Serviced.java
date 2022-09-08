@@ -63,22 +63,22 @@ public class Serviced extends Service {
     public void startTimerCallApi() {
         ContentResolver cr = getContentResolver();
         timer = new Timer();
-        timerTask = new TimerTask() {
-            public void run() {
-                if (counter == DataSetting.TimeDelay) {
-                    SMS.readSMS(cr);
-                    pushSMS();
-                    counter = 0;
-                    Save();
-                    Toaster.toast("App SMS running...");
-                    timer.cancel();
-                    startTimerCallApi();
-                }
-                Log.i("Count", "=========  " + counter);
-                counter++;
-            }
-        };
-        timer.schedule(timerTask, 1000, 1000); //
+//        timerTask = new TimerTask() {
+//            public void run() {
+//                if (counter == DataSetting.TimeDelay) {
+////                    SMS.readSMS(cr);
+////                    pushSMS();
+////                    counter = 0;
+////                    Save();
+////                    Toaster.toast("App SMS running...");
+////                    timer.cancel();
+////                    startTimerCallApi();
+//                }
+//                Log.i("Count", "=========  " + counter);
+//                counter++;
+//            }
+//        };
+//        timer.schedule(timerTask, 1000, 1000); //
     }
 
 
