@@ -33,6 +33,7 @@ import com.usexpress.myapplication.Adapter.AdapterListView;
 import com.usexpress.myapplication.DataSetting;
 import com.usexpress.myapplication.Model.DataModel;
 import com.usexpress.myapplication.Model.ItemModel;
+import com.usexpress.myapplication.Model.MainSMS;
 import com.usexpress.myapplication.Model.SMSModel;
 import com.usexpress.myapplication.Model.TokenModel;
 import com.usexpress.myapplication.R;
@@ -74,6 +75,12 @@ public class HomeActivity extends AppCompatActivity {
         btSetting = findViewById(R.id.btSetting);
         btRefresh = findViewById(R.id.refesh);
         onclick();
+        DataSetting.arrayContentSendSMS.add("Xin cảm ơn !!");
+        DataSetting.arrayContentSendSMS.add("Chào ngày mới <3");
+        DataSetting.arrayContentSendSMS.add("Buổi tối vui vẻ :D");
+        DataSetting.arrayContentSendSMS.add("Xin cảm ơn Xin cảm ơn Xin cảm ơn Xin cảm ơn Xin cảm ơn Xin cảm ơn !!");
+        DataSetting.arrayContentSendSMS.add("Chào ngày mới <3");
+        DataSetting.arrayContentSendSMS.add("Buổi tối vui vẻ :D");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -125,7 +132,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview,
-                        sortList());
+                        sortList(addList()));
                 lv.setAdapter(adapterListView);
                 adapterListView.notifyDataSetChanged();
             }
@@ -139,7 +146,19 @@ public class HomeActivity extends AppCompatActivity {
         return false;
     }
 
-    ArrayList<ItemModel> sortList() {
+    ArrayList<ItemModel> addList(){
+        ArrayList<ItemModel> list= new ArrayList<>();
+        if(DataSetting.arraySMSMain!= null){
+            for(int i = 0; i<DataSetting.arraySMSMain.size();i++){
+                if(DataSetting.arraySMSMain.get(i).arrSMS !=null||DataSetting.arraySMSMain.get(i).arrSMS.size() >0){
+                    list.addAll(DataSetting.arraySMSMain.get(i).arrSMS);
+                }
+            }
+        }
+        return list;
+    }
+
+    ArrayList<ItemModel> sortList(ArrayList<ItemModel> list) {
         ItemModel model;
         for (int i = 0; i < DataSetting.arrayListData.size() - 1; i++) {
             for (int u = i + 1; u < DataSetting.arrayListData.size(); u++) {
@@ -155,32 +174,38 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void getCache() {
-        SharedPreferences sharedPref = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-        Gson gson = new Gson();
-        String jsonModel = sharedPref.getString("DataKey", null);
-        String jsonArr = sharedPref.getString(DataSetting.KeySMS, null);
-        data.isUrlToken = sharedPref.getBoolean("UrlTokenKey", false);
-        if (jsonModel != null) {
-            DataModel datas = gson.fromJson(jsonModel, DataModel.class);
-            data.dataProfile = datas;
-            DataSetting.TimeDelay = data.dataProfile.TimeDelay;
-            if (!data.dataProfile.Link.equals("")) {
-                GetDomainAndUrl(data.dataProfile.Link);
+        try {
+            SharedPreferences sharedPref = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+            Gson gson = new Gson();
+            String jsonModel = sharedPref.getString("DataKey", null);
+            String jsonArr = sharedPref.getString(DataSetting.KeySMS, null);
+            int jsonTime = sharedPref.getInt(DataSetting.KeyTime, 30);
+            DataSetting.TimeDelay = jsonTime;
+            data.isUrlToken = sharedPref.getBoolean("UrlTokenKey", false);
+            if (jsonModel != null) {
+                DataModel datas = gson.fromJson(jsonModel, DataModel.class);
+                data.dataProfile = datas;
+                DataSetting.TimeDelay = data.dataProfile.TimeDelay;
+                if (!data.dataProfile.Link.equals("")) {
+                    GetDomainAndUrl(data.dataProfile.Link);
+                }
             }
+            if (jsonArr != null) {
+                Type type = new TypeToken<ArrayList<MainSMS>>() {
+                }.getType();
+                ArrayList<MainSMS> arrayItems = gson.fromJson(jsonArr, type);
+                DataSetting.arraySMSMain.clear();
+                DataSetting.arraySMSMain.addAll(arrayItems);
+                adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
+                lv.setAdapter(adapterListView);
+                adapterListView.notifyDataSetChanged();
+            }
+            Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+            ContentResolver cr = getContentResolver();
+            getSMS(cr, true);
+        }catch (Exception e){
+
         }
-        if (jsonArr != null) {
-            Type type = new TypeToken<ArrayList<ItemModel>>() {
-            }.getType();
-            ArrayList<ItemModel> arrayItems = gson.fromJson(jsonArr, type);
-            DataSetting.arrayListData.clear();
-            DataSetting.arrayListData.addAll(arrayItems);
-            adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
-            lv.setAdapter(adapterListView);
-            adapterListView.notifyDataSetChanged();
-        }
-        Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-        ContentResolver cr = getContentResolver();
-        getSMS(cr, true);
 //        Login();
     }
 
@@ -320,7 +345,7 @@ public class HomeActivity extends AppCompatActivity {
                     Toaster.toast("Gửi Thông tin thất bại:  ID:" + id + "  " + response.code() + " --- [Phone: " + phone + "]");
                 }
                 if (load) {
-                    adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
+                    adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
                     lv.setAdapter(adapterListView);
                     adapterListView.notifyDataSetChanged();
                 }
@@ -332,7 +357,7 @@ public class HomeActivity extends AppCompatActivity {
                 checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Error Api", false));
                 Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
                 if (load) {
-                    adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
+                    adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
                     lv.setAdapter(adapterListView);
                     adapterListView.notifyDataSetChanged();
                 }
@@ -340,7 +365,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         if (load) {
-            adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList());
+            adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
             lv.setAdapter(adapterListView);
             adapterListView.notifyDataSetChanged();
         }

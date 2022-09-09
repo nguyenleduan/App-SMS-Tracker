@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -25,15 +26,17 @@ import java.util.ArrayList;
 public class AdapterListPhoneDashboard extends BaseAdapter {
     private Context mycontext;
     private int myLayout;
+    private int myButton;
     private ArrayList<MainSMS> arry;
 
     TextView tvAllowPhone, tvStartDate, tvTimeRun, tvResponse;
     Switch SResponse;
 
-    public AdapterListPhoneDashboard(Context context, int layout, ArrayList<MainSMS> arr) {
+    public AdapterListPhoneDashboard(Context context, int layout,int myButton, ArrayList<MainSMS> arr) {
         this.mycontext = context;
         this.myLayout = layout;
         this.arry = arr;
+        this.myButton = myButton;
     }
 
     @Override
@@ -54,45 +57,63 @@ public class AdapterListPhoneDashboard extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater inflater = (LayoutInflater) mycontext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        convertView = inflater.inflate(myLayout, null);
-        RelativeLayout relativeLayout;
-        tvAllowPhone = convertView.findViewById(R.id.tvAllowPhone);
-        relativeLayout = convertView.findViewById(R.id.Relative);
-        tvStartDate = convertView.findViewById(R.id.tvStartDate);
-        tvTimeRun = convertView.findViewById(R.id.tvTimeRun);
-        tvResponse = convertView.findViewById(R.id.tvResponse);
-        SResponse = convertView.findViewById(R.id.SResponse);
-        tvAllowPhone.setText(arry.get(position).phone);
-        tvStartDate.setText(arry.get(position).date);
-        tvTimeRun.setText(arry.get(position).timeStartTracker + " ---- " + arry.get(position).timeEndTracker);
-        tvResponse.setText(arry.get(position).Content);
-        tvResponse.setText(arry.get(position).Content);
-        SResponse.setChecked(arry.get(position).isSendSMS);
-        DataSetting dataSetting = new DataSetting();
-        relativeLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(inflater.getContext(), SettingAppActivity.class);
-                mycontext.startActivity(intent);
-            }
-        });
-        SResponse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d("Switch is Response [" + position + ": ", " " + isChecked);
-                MainSMS sms = new MainSMS(
-                        arry.get(position).arrSMS,
-                        isChecked,
-                        arry.get(position).Content,
-                        arry.get(position).date,
-                        arry.get(position).phone,
-                        arry.get(position).timeStartTracker,
-                        arry.get(position).timeEndTracker);
-                dataSetting.setValueArrMainSMS(position, sms);
-            }
-        });
-        return convertView;
+        Log.d("zise ------------------------",""+position);
+        if(arry.size()-1 != position){
+            LayoutInflater inflater = (LayoutInflater) mycontext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(myLayout, null);
+            RelativeLayout relativeLayout;
+            tvAllowPhone = convertView.findViewById(R.id.tvAllowPhone);
+            relativeLayout = convertView.findViewById(R.id.Relative);
+            tvStartDate = convertView.findViewById(R.id.tvStartDate);
+            tvTimeRun = convertView.findViewById(R.id.tvTimeRun);
+            tvResponse = convertView.findViewById(R.id.tvResponse);
+            SResponse = convertView.findViewById(R.id.SResponse);
+            tvAllowPhone.setText(arry.get(position).phone);
+            tvStartDate.setText(arry.get(position).date);
+            tvTimeRun.setText(arry.get(position).timeStartTracker + " ---- " + arry.get(position).timeEndTracker);
+            tvResponse.setText(arry.get(position).Content);
+            tvResponse.setText(arry.get(position).Content);
+            SResponse.setChecked(arry.get(position).isSendSMS);
+            DataSetting dataSetting = new DataSetting();
+            relativeLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(inflater.getContext(), SettingAppActivity.class);
+                    intent.putExtra("Key_2", position);
+                    mycontext.startActivity(intent);
+                }
+            });
+            SResponse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    Log.d("Switch is Response [" + position + ": ", " " + isChecked);
+                    MainSMS sms = new MainSMS(
+                            arry.get(position).arrSMS,
+                            isChecked,
+                            arry.get(position).Content,
+                            arry.get(position).date,
+                            arry.get(position).phone,
+                            arry.get(position).timeStartTracker,
+                            arry.get(position).timeEndTracker);
+                    dataSetting.setValueArrMainSMS(position, sms);
+                }
+            });
+            return convertView;
+        }else{
+            LayoutInflater inflater = (LayoutInflater) mycontext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(myButton, null);
+            Button bt;
+            bt = convertView.findViewById(R.id.btAdd);
+            bt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(inflater.getContext(), SettingAppActivity.class);
+                    intent.putExtra("Key_2", -2);
+                    mycontext.startActivity(intent);
+                }
+            });
+            return convertView;
+        }
     }
 
 }
