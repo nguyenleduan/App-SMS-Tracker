@@ -25,7 +25,7 @@ public class MainSMS {
     }
     public Date getDateStart(){
         try {
-            SimpleDateFormat formatter1 = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+            SimpleDateFormat formatter1 = new SimpleDateFormat("dd/MM/yyyy");
             return formatter1.parse(date);
         } catch (ParseException e) {
             e.printStackTrace();

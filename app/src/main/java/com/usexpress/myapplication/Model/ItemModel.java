@@ -7,14 +7,16 @@ public class ItemModel {
     private String Date_SMSArrived;
     private String Date_CallSuccessful ;
     private boolean Succeeded;
+    private int Answer; // 0 chua gui // 2 da qua
 
-    public ItemModel(long ID, String phone, String message, String date_SMSArrived, String date_CallSuccessful, boolean succeeded) {
+    public ItemModel(long ID, String phone, String message, String date_SMSArrived, String date_CallSuccessful, boolean succeeded, int answer) {
         this.ID = ID;
         this.phone = phone;
         Message = message;
         Date_SMSArrived = date_SMSArrived;
         Date_CallSuccessful = date_CallSuccessful;
         Succeeded = succeeded;
+        Answer = answer;
     }
 
     public String getPhone() {
@@ -63,5 +65,13 @@ public class ItemModel {
 
     public void setSucceeded(boolean succeeded) {
         Succeeded = succeeded;
+    }
+
+    public int getAnswer() {
+        return Answer;
+    }
+
+    public void setAnswer(int answer) {
+        Answer = answer;
     }
 }

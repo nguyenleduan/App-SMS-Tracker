@@ -2,6 +2,7 @@ package com.usexpress.myapplication.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.usexpress.myapplication.Activity.DashboardActivity;
 import com.usexpress.myapplication.Activity.SettingAppActivity;
 import com.usexpress.myapplication.DataSetting;
@@ -95,7 +97,8 @@ public class AdapterListPhoneDashboard extends BaseAdapter {
                             arry.get(position).phone,
                             arry.get(position).timeStartTracker,
                             arry.get(position).timeEndTracker);
-                    dataSetting.setValueArrMainSMS(position, sms);
+                    dataSetting.setValueArrMainSMS(position, sms,mycontext);
+
                 }
             });
             return convertView;
@@ -115,5 +118,6 @@ public class AdapterListPhoneDashboard extends BaseAdapter {
             return convertView;
         }
     }
+
 
 }

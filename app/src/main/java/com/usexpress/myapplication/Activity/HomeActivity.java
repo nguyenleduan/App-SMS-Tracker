@@ -18,6 +18,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.text.format.DateFormat;
 import android.text.format.Time;
@@ -39,6 +40,7 @@ import com.usexpress.myapplication.Model.TokenModel;
 import com.usexpress.myapplication.R;
 import com.usexpress.myapplication.Restarter;
 import com.usexpress.myapplication.Service.ApiV2;
+import com.usexpress.myapplication.Service.GetSMS;
 import com.usexpress.myapplication.Service.GetTokenService;
 import com.usexpress.myapplication.Serviced;
 
@@ -76,11 +78,6 @@ public class HomeActivity extends AppCompatActivity {
         btRefresh = findViewById(R.id.refesh);
         onclick();
         DataSetting.arrayContentSendSMS.add("Xin cảm ơn !!");
-        DataSetting.arrayContentSendSMS.add("Chào ngày mới <3");
-        DataSetting.arrayContentSendSMS.add("Buổi tối vui vẻ :D");
-        DataSetting.arrayContentSendSMS.add("Xin cảm ơn Xin cảm ơn Xin cảm ơn Xin cảm ơn Xin cảm ơn Xin cảm ơn !!");
-        DataSetting.arrayContentSendSMS.add("Chào ngày mới <3");
-        DataSetting.arrayContentSendSMS.add("Buổi tối vui vẻ :D");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -108,8 +105,9 @@ public class HomeActivity extends AppCompatActivity {
             startService(mServiceIntent);
         }
         if (ContextCompat.checkSelfPermission(getBaseContext(), "android.permission.READ_SMS") == PackageManager.PERMISSION_GRANTED) {
-            getCache();
+             Log.d("android.permission.READ_SMS", "true");
         }
+        getCache();
     }
 
     private void onclick() {
@@ -125,7 +123,9 @@ public class HomeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toaster.toast("Đang gửi lại SMS fail");
                 ContentResolver cr = getContentResolver();
-                getSMS(cr, true);
+                GetSMS getSMS = new GetSMS();
+                getSMS.readSMS(cr);
+                SendFail(true);
             }
         });
         btRefresh.setOnClickListener(new View.OnClickListener() {
@@ -135,6 +135,7 @@ public class HomeActivity extends AppCompatActivity {
                         sortList(addList()));
                 lv.setAdapter(adapterListView);
                 adapterListView.notifyDataSetChanged();
+                Toaster.toast("Updated....");
             }
         });
     }
@@ -160,36 +161,28 @@ public class HomeActivity extends AppCompatActivity {
 
     ArrayList<ItemModel> sortList(ArrayList<ItemModel> list) {
         ItemModel model;
-        for (int i = 0; i < DataSetting.arrayListData.size() - 1; i++) {
-            for (int u = i + 1; u < DataSetting.arrayListData.size(); u++) {
-                if (checkSort(DataSetting.arrayListData.get(i).getID(), DataSetting.arrayListData.get(u).getID())) {
-                    model = DataSetting.arrayListData.get(u);
-                    DataSetting.arrayListData.set(u, DataSetting.arrayListData.get(i));
-                    DataSetting.arrayListData.set(i, model);
+        for (int i = 0; i < list.size() - 1; i++) {
+            for (int u = i + 1; u < list.size(); u++) {
+                if (checkSort(list.get(i).getID(), list.get(u).getID())) {
+                    model = list.get(u);
+                    list.set(u, list.get(i));
+                    list.set(i, model);
                 }
             }
         }
 
-        return DataSetting.arrayListData;
+        return list;
     }
 
     public void getCache() {
         try {
             SharedPreferences sharedPref = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
             Gson gson = new Gson();
-            String jsonModel = sharedPref.getString("DataKey", null);
             String jsonArr = sharedPref.getString(DataSetting.KeySMS, null);
+            String jsonArrContent = sharedPref.getString(DataSetting.KeyContent, null);
             int jsonTime = sharedPref.getInt(DataSetting.KeyTime, 30);
             DataSetting.TimeDelay = jsonTime;
-            data.isUrlToken = sharedPref.getBoolean("UrlTokenKey", false);
-            if (jsonModel != null) {
-                DataModel datas = gson.fromJson(jsonModel, DataModel.class);
-                data.dataProfile = datas;
-                DataSetting.TimeDelay = data.dataProfile.TimeDelay;
-                if (!data.dataProfile.Link.equals("")) {
-                    GetDomainAndUrl(data.dataProfile.Link);
-                }
-            }
+            Log.d("get cache Time delay:", ""+DataSetting.TimeDelay);
             if (jsonArr != null) {
                 Type type = new TypeToken<ArrayList<MainSMS>>() {
                 }.getType();
@@ -199,163 +192,80 @@ public class HomeActivity extends AppCompatActivity {
                 adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
                 lv.setAdapter(adapterListView);
                 adapterListView.notifyDataSetChanged();
+                Log.d("get cache arr main :", "Length: "+DataSetting.arraySMSMain.size());
+                adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview,
+                        sortList(addList()));
+                lv.setAdapter(adapterListView);
+                adapterListView.notifyDataSetChanged();
             }
-            Log.d("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-            ContentResolver cr = getContentResolver();
-            getSMS(cr, true);
+            if (jsonArrContent != null) {
+                Type type = new TypeToken<ArrayList<String>>() {
+                }.getType();
+                ArrayList<String> arrayItems = gson.fromJson(jsonArrContent, type);
+                DataSetting.arrayContentSendSMS.clear();
+                DataSetting.arrayContentSendSMS.addAll(arrayItems);
+                Log.d("get cache List content:", "Length: "+DataSetting.arrayContentSendSMS.size());
+            }
         }catch (Exception e){
-
+            Log.d("Error cache", ""+e);
         }
 //        Login();
     }
-
-    public boolean checkDataCache() {
-        if (DataSetting.dataProfile == null
-                || DataSetting.dataProfile.AllowPhone == null) {
-            return false;
-        }
-        return true;
-    }
-
-    public void getSMS(ContentResolver cr, boolean load) {
-        Uri inboxURI = Uri.parse("content://sms/inbox");
-        String[] reqCols = new String[]{"_id", "address", "body", "date"};
-//        ContentResolver cr = getContentResolver();
-        Cursor cursor = cr.query(inboxURI, reqCols, null, null, null);
-        DataSetting.arrayListSMS.clear();
-        if (!cursor.moveToFirst()) {
-            return;
-        }
-        try {
-            final int idIndex = cursor.getColumnIndex("_id");
-            final int nameIndex = cursor.getColumnIndex("address");
-            final int descriptionIndex = cursor.getColumnIndex("body");
-            final int dateSMS = cursor.getColumnIndex("date");
-            //TODO ??
-            if (!cursor.moveToFirst()) {
-            }
-            DataSetting.arrayListSMS.clear();
-            //
-            do {
-                final long id = cursor.getLong(idIndex);
-                final String phone = cursor.getString(nameIndex);
-                final String body = cursor.getString(descriptionIndex);
-                Time time = new Time();
-                time.setToNow();
-                final String date = DateFormat.format("HH:mm:ss dd/MM/yyyy", new Date(cursor.getLong(dateSMS))).toString();
-//                Log.d("TIME TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + phone, Long.toString(time.toMillis(false)));
-                /// TODO check phone add list
-//                DataSetting.dataProfile.AllowPhone = "teckcombank,111";
-                if (checkDataCache()) {
-                    String[] list = DataSetting.dataProfile.AllowPhone.split(",");
-                    Log.d("Check list zise:", list.length + "");
-                    for (int i = 0; i < list.length; i++) {
-                        if (phone.contains(list[i]) && cursor.getLong(dateSMS) > DataSetting.dataProfile.DateStart) {
-                            DataSetting.arrayListSMS.add(new SMSModel(id, phone, body, date));
-                            //TODO check
-                            Log.d("phone:", phone);
-                            Log.d("body", body);
-                            Log.d("date", date);
-                            Log.d("list length", DataSetting.arrayListSMS.size() + "");
-                            Log.d("-------------------------", "-------------------------");
-                        }
-                    }
-                }
-            } while (cursor.moveToNext());
-        } finally {
-            cursor.close();
-        }
-        checkSMS(load);
-    }
-
-    public void checkSMS(boolean load) {
+    public void SendFail(boolean load) {
         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
         Date date = new Date();
         String dateNow = formatter.format(date);
-        if (DataSetting.arrayListSMS == null || DataSetting.arrayListSMS.size() == 0) {
+        if (DataSetting.arraySMSMain == null || DataSetting.arraySMSMain.size() == 0) {
             Toaster.toast("Không đọc được SMS nào !!");
         } else {
-            for (int i = 0; i < DataSetting.arrayListSMS.size(); i++) {
-                if (checkNew(DataSetting.arrayListSMS.get(i).getID())) {
-                    callApi(DataSetting.arrayListSMS.get(i).getID(),
-                            DataSetting.arrayListSMS.get(i).getPhone(),
-                            DataSetting.arrayListSMS.get(i).getBody(),
-                            DataSetting.arrayListSMS.get(i).getDate(), dateNow, load);
-                }
-            }
-            checkFail(load);
-        }
-    }
-
-    public boolean checkNew(long id) {
-        if (DataSetting.arrayListData == null || DataSetting.arrayListData.size() == 0) {
-            return true;
-        } else {
-            for (int i = 0; i < DataSetting.arrayListData.size(); i++) {
-                if (DataSetting.arrayListData.get(i).getID() == id) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
-    public void checkFail(boolean load) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Date date = new Date();
-        String dateNow = formatter.format(date);
-        for (int i = 0; i < DataSetting.arrayListData.size(); i++) {
-            if (!DataSetting.arrayListData.get(i).isSucceeded()) {
-                callApi(DataSetting.arrayListData.get(i).getID(),
-                        DataSetting.arrayListData.get(i).getPhone(),
-                        DataSetting.arrayListData.get(i).getMessage(),
-                        DataSetting.arrayListData.get(i).getDate_SMSArrived(),
-                        dateNow, load);
-            }
-        }
-    }
-
-    public void checkSaveCache(ItemModel model) {
-        if (DataSetting.arrayListData.size() == 0) {
-            data.arrayListData.add(model);
-        } else {
-            if (checkNew(model.getID())) {
-                data.arrayListData.add(model);
-            } else {
-                for (int i = 0; i < DataSetting.arrayListData.size(); i++) {
-                    if (DataSetting.arrayListData.get(i).getID() == model.getID()) {
-                        data.arrayListData.get(i).setSucceeded(model.isSucceeded());
+            for (int i = 0; i < DataSetting.arraySMSMain.size(); i++) {
+                for(int y =0; y < DataSetting.arraySMSMain.get(i).arrSMS.size();y++){
+                    if(!DataSetting.arraySMSMain.get(i).arrSMS.get(y).isSucceeded()){
+                        callApi( DataSetting.arraySMSMain.get(i).arrSMS.get(y).getID(),
+                                DataSetting.arraySMSMain.get(i).arrSMS.get(y).getPhone(),
+                                DataSetting.arraySMSMain.get(i).arrSMS.get(y).getMessage(),
+                                DataSetting.arraySMSMain.get(i).arrSMS.get(y).getDate_SMSArrived(), dateNow, load, DataSetting.arraySMSMain.get(i).Content,i,y);
                     }
                 }
             }
         }
     }
-
-    public void callApi(long id, String phone, String body, String dateSMS, String dateNow, boolean load) {
-
+    public void callApi(long id, String phone, String body, String dateSMS, String dateNow, boolean load,String content,int i,int y) {
         ApiV2.ApiService2.Push("" + myPhoneNumber, phone, body, dateSMS).enqueue(new Callback<Boolean>() {
             @Override
             public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                Log.d("--------Thành công-*------" + myPhoneNumber, "" + response.code());
+                Log.d("--------Thành công-*------" + DataSetting.myPhoneNumber, "" + response.code());
                 if (response.code() == 200) {
-                    checkSaveCache(new ItemModel(id, phone, body, dateSMS, dateNow, true));
                     Toaster.toast("Đã gửi nội dung: ID:" + id + " [Phone: " + phone + "]");
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setSucceeded(true);
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setDate_CallSuccessful(""+dateNow);
                 } else {
-                    checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Gửi Api fail " + response.code(), false));
                     Toaster.toast("Gửi Thông tin thất bại:  ID:" + id + "  " + response.code() + " --- [Phone: " + phone + "]");
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setDate_CallSuccessful(""+response.code());
                 }
                 if (load) {
                     adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
                     lv.setAdapter(adapterListView);
                     adapterListView.notifyDataSetChanged();
                 }
+                if(DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 0  && DataSetting.arraySMSMain.get(i).isSendSMS){
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(data.AnswerAction(phone,content));
+                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 1) {
+                }else{
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(2);
+                }
             }
-
             @Override
             public void onFailure(Call<Boolean> call, Throwable t) {
                 Log.d("--------Thất bại-------", "" + t);
-                checkSaveCache(new ItemModel(id, phone, body, dateSMS, "Error Api", false));
                 Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
+                DataSetting.arraySMSMain.get(i).arrSMS.get(y).setDate_CallSuccessful("Api: ERROR");
+                if(DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 0  && DataSetting.arraySMSMain.get(i).isSendSMS){
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(data.AnswerAction(phone,content));
+                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 1) {
+                } else{
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(2);
+                }
                 if (load) {
                     adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
                     lv.setAdapter(adapterListView);
@@ -368,36 +278,6 @@ public class HomeActivity extends AppCompatActivity {
             adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
             lv.setAdapter(adapterListView);
             adapterListView.notifyDataSetChanged();
-        }
-    }
-
-    private void Login() {
-        if (!data.isUrlToken) {
-            if (data.dataProfile != null) {
-                if (data.dataProfile.User != null && data.dataProfile.Pass != null) {
-                    try {
-                        GetTokenService.ApiService.GetToken(data.dataProfile.User, data.dataProfile.Pass, "password").enqueue(new Callback<TokenModel>() {
-                            @Override
-                            public void onResponse(Call<TokenModel> call, Response<TokenModel> response) {
-                                if (response.code() == 200) {
-                                    data.Token = response.body().access_token;
-                                    Toast.makeText(HomeActivity.this, "", Toast.LENGTH_SHORT).show();
-                                    Toast.makeText(HomeActivity.this, "Đã đăng nhập thành công", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(HomeActivity.this, "Đăng nhập thất bại", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Call<TokenModel> call, Throwable t) {
-                                Toast.makeText(HomeActivity.this, "Đăng nhập thất bại", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (Exception e) {
-                        Toast.makeText(HomeActivity.this, "Lỗi home activity 114", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
         }
     }
 

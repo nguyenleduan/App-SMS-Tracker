@@ -2,19 +2,26 @@ package com.usexpress.myapplication.Activity;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.MultiAutoCompleteTextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.usexpress.myapplication.Adapter.AdapterListPhoneDashboard;
@@ -34,20 +41,23 @@ public class DashboardActivity extends AppCompatActivity {
 
     public static AdapterListPhoneDashboard adapterListView;
     public ListView lv;
-    Button btSaveTime;
+    Button btSaveTime,btAddContent;
     EditText edtTimeDelay;
     ArrayList<MainSMS> list  = new ArrayList<>();
     ArrayList<ItemModel> arrSMS = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        arrSMS.add(new ItemModel(11,"TEST1","asdas","asdasd","asdasd",true));
+        arrSMS.add(new ItemModel(11,"TEST1","asdas","asdasd","asdasd",true,0));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
         lv = findViewById(R.id.lvDashboard);
         edtTimeDelay = findViewById(R.id.edtTimeDelay);
+        btAddContent = findViewById(R.id.btAddContent);
         btSaveTime = findViewById(R.id.btSaveTime);
         lv.setScrollContainer(false);
         addDate();
+
+        askPermissionAndSendSMS();
         Log.d("asdasd","asdasd" + list.size());
         edtTimeDelay.setText(DataSetting.TimeDelay+"");
         btSaveTime.setOnClickListener(new View.OnClickListener() {
@@ -56,7 +66,36 @@ public class DashboardActivity extends AppCompatActivity {
                 Save();
             }
         });
+        btAddContent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogAddContent();
+            }
+        });
     }
+
+    private static final int MY_PERMISSION_REQUEST_CODE_SEND_SMS = 1;
+    private void askPermissionAndSendSMS() {
+
+        // With Android Level >= 23, you have to ask the user
+        // for permission to send SMS.
+        if (android.os.Build.VERSION.SDK_INT >=  android.os.Build.VERSION_CODES.M) { // 23
+
+            // Check if we have send SMS permission
+            int sendSmsPermisson = ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.SEND_SMS);
+
+            if (sendSmsPermisson != PackageManager.PERMISSION_GRANTED) {
+                // If don't have permission so prompt the user.
+                this.requestPermissions(
+                        new String[]{Manifest.permission.SEND_SMS},
+                        MY_PERMISSION_REQUEST_CODE_SEND_SMS
+                );
+                return;
+            }
+        }
+    }
+
     void addDate(){
         list.clear();
         if(DataSetting.arraySMSMain!=null && DataSetting.arraySMSMain.size()>0){
@@ -82,6 +121,9 @@ public class DashboardActivity extends AppCompatActivity {
             }else{
                 timer = 30;
             }
+            Gson gson = new Gson();
+            String json = gson.toJson(DataSetting.arrayContentSendSMS);
+            prefsEditor.putString(DataSetting.KeyContent, json);
             edtTimeDelay.setText(timer+"");
             DataSetting.TimeDelay = timer;
             prefsEditor.putInt(DataSetting.KeyTime, timer);
@@ -89,12 +131,37 @@ public class DashboardActivity extends AppCompatActivity {
             Log.d("Cache:","Save cache success");
             edtTimeDelay.setCursorVisible(false);
             DataSetting.hideKeyboard(DashboardActivity.this);
-            DialogS("Save thành công");
+            Toast.makeText(this, "Save Success", Toast.LENGTH_SHORT).show();
         }catch (Exception e){
             Log.e("Cache:","Save time Error");
         }
     }
 
+    void dialogAddContent(){
+        MultiAutoCompleteTextView edt;
+        final Dialog dialog = new Dialog(DashboardActivity.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(false);
+        dialog.setContentView(R.layout.dialog_add_content);
+        MultiAutoCompleteTextView editAdd = dialog.findViewById(R.id.edtAdd);
+        Button dialogButton = dialog.findViewById(R.id.btAddContentDialog);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(editAdd.getText()== null ||  editAdd.getText().toString().isEmpty()){
+                    Toast.makeText(DashboardActivity.this, "Add content fail !!\n !! content empty !!", Toast.LENGTH_SHORT).show();
+                }else{
+                    DataSetting data = new DataSetting();
+                    data.addContent(editAdd.getText()+"");
+                    Save();
+                }
+                DataSetting.hideKeyboard(DashboardActivity.this);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
     void DialogS(String s){
         AlertDialog.Builder builder = new AlertDialog.Builder(DashboardActivity.this);
         builder.setMessage(s).setTitle("Thông báo")

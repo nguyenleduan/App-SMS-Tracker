@@ -50,10 +50,15 @@ public class SettingAppActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
         spnCategory.setAdapter(adapter);
         if(index != -2){
+            Log.d("index:", "---------- "+index);
             spnCategory.setSelection(dataSetting.getIndexListContent(DataSetting.arraySMSMain.get(index).Content+""));
+        }else{
+            spnCategory.setSelection(0);
+            Log.d("ind123ex:", "---------- "+index);
         }
         setValue();
         Event();
+        adapter.notifyDataSetChanged();
     }
 
 
@@ -92,7 +97,7 @@ public class SettingAppActivity extends AppCompatActivity {
                             edtPhone.getText()+"",
                             edtTimeStart.getText()+"",
                             edtTimeEdt.getText()+"");
-                    dataSetting.setValueArrMainSMS(index,sms);
+                    dataSetting.setValueArrMainSMS(index,sms,SettingAppActivity.this);
                 }
                 Save();
             }
@@ -101,11 +106,12 @@ public class SettingAppActivity extends AppCompatActivity {
         spnCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("",""+DataSetting.arrayContentSendSMS.get(position));
+                Log.d("",position+"   "+DataSetting.arrayContentSendSMS.get(position));
                 content = DataSetting.arrayContentSendSMS.get(position);
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                Log.d("","asdsss");
             }
         });
         SAnswer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

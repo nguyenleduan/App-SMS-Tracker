@@ -52,6 +52,8 @@ public class Serviced extends Service {
     private Timer timer, timerSave;
     private TimerTask timerTask;
     GetSMS SMS = new GetSMS();
+    DataSetting dataSetting = new DataSetting();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -60,43 +62,50 @@ public class Serviced extends Service {
         else
             startForeground(1, new Notification());
     }
+
     public void startTimerCallApi() {
         ContentResolver cr = getContentResolver();
         timer = new Timer();
-//        timerTask = new TimerTask() {
-//            public void run() {
-//                if (counter == DataSetting.TimeDelay) {
-////                    SMS.readSMS(cr);
-////                    pushSMS();
-////                    counter = 0;
-////                    Save();
-////                    Toaster.toast("App SMS running...");
-////                    timer.cancel();
-////                    startTimerCallApi();
-//                }
-//                Log.i("Count", "=========  " + counter);
-//                counter++;
-//            }
-//        };
-//        timer.schedule(timerTask, 1000, 1000); //
+        timerTask = new TimerTask() {
+            public void run() {
+                if (counter == DataSetting.TimeDelay) {
+                    SMS.readSMS(cr);
+                    Toaster.toast("App SMS running...");
+                }
+                if (counter >= DataSetting.TimeDelay + 2) {
+                    pushSMS();
+                }
+                if (counter == DataSetting.TimeDelay + 5) {
+                    counter = 0;
+                    timer.cancel();
+                    startTimerCallApi();
+                    Save();
+                }
+                Log.i("Count", "=========  " + counter);
+                counter++;
+            }
+        };
+        timer.schedule(timerTask, 1000, 1000); //
     }
 
-
-    void pushSMS(){
-        if(DataSetting.arraySMSMain!=null && DataSetting.arraySMSMain.size() >0)
-        for(int i = 0 ;i<DataSetting.arraySMSMain.size();i++){
-            if(DataSetting.arraySMSMain.get(i).arrSMS!=null && DataSetting.arraySMSMain.get(i).arrSMS.size()>0){
-                for(int x = 0 ;x <DataSetting.arraySMSMain.get(i).arrSMS.size();x++){
-                    if(!DataSetting.arraySMSMain.get(i).arrSMS.get(x).isSucceeded()){
-                        callApi(DataSetting.arraySMSMain.get(i).arrSMS.get(x).getID(),DataSetting.arraySMSMain.get(i).arrSMS.get(x).getPhone(),DataSetting.arraySMSMain.get(i).arrSMS.get(x).getMessage(),
-                                DataSetting.arraySMSMain.get(i).arrSMS.get(x).getDate_SMSArrived(),i,x);
+    void pushSMS() {
+        if (DataSetting.arraySMSMain != null && DataSetting.arraySMSMain.size() > 0)
+            for (int i = 0; i < DataSetting.arraySMSMain.size(); i++) {
+                if (DataSetting.arraySMSMain.get(i).arrSMS != null && DataSetting.arraySMSMain.get(i).arrSMS.size() > 0) {
+                    for (int x = 0; x < DataSetting.arraySMSMain.get(i).arrSMS.size(); x++) {
+                        if (!DataSetting.arraySMSMain.get(i).arrSMS.get(x).isSucceeded()) {
+                            callApi(DataSetting.arraySMSMain.get(i).arrSMS.get(x).getID(), DataSetting.arraySMSMain.get(i).arrSMS.get(x).getPhone(), DataSetting.arraySMSMain.get(i).arrSMS.get(x).getMessage(),
+                                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).getDate_SMSArrived(), i, x);
+                        }
                     }
                 }
             }
-        }
-        Save();
     }
-    public void callApi(long id, String phone, String body, String dateSMS,int i,int x) {
+
+    public void callApi(long id, String phone, String body, String dateSMS, int i, int x) {
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+        Date date = new Date();
+        String dateNow = formatter.format(date);
         ApiV2.ApiService2.Push("" + DataSetting.myPhoneNumber, phone, body, dateSMS).enqueue(new Callback<Boolean>() {
             @Override
             public void onResponse(Call<Boolean> call, Response<Boolean> response) {
@@ -104,21 +113,38 @@ public class Serviced extends Service {
                 if (response.code() == 200) {
                     Toaster.toast("Đã gửi nội dung: ID:" + id + " [Phone: " + phone + "]");
                     DataSetting.arraySMSMain.get(i).arrSMS.get(x).setSucceeded(true);
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setDate_CallSuccessful("" + dateNow);
                 } else {
                     Toaster.toast("Gửi Thông tin thất bại:  ID:" + id + "  " + response.code() + " --- [Phone: " + phone + "]");
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setDate_CallSuccessful("" + response.code());
                 }
+                if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 0 && DataSetting.arraySMSMain.get(i).isSendSMS) {
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(dataSetting.AnswerAction(phone, DataSetting.arraySMSMain.get(i).Content));
+                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 1) {
+                } else {
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(2);
+                }
+                Log.d("asda", "");
+                return;
             }
+
             @Override
             public void onFailure(Call<Boolean> call, Throwable t) {
                 Log.d("--------Thất bại-------", "" + t);
                 Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
                 DataSetting.arraySMSMain.get(i).arrSMS.get(x).setDate_CallSuccessful("Api: ERROR");
+                if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 0 && DataSetting.arraySMSMain.get(i).isSendSMS) {
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(dataSetting.AnswerAction(phone, DataSetting.arraySMSMain.get(i).Content));
+                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 1) {
+                } else {
+                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(2);
+                }
             }
         });
     }
 
 
-    void Save() {
+    public void Save() {
         SharedPreferences mPrefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
         Gson gson = new Gson();

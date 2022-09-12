@@ -48,6 +48,7 @@
         android:textSize="14sp"
         android:textStyle="bold" />
 
+
     <TextView
         android:id="@+id/tvDateFail"
         android:layout_width="wrap_content"
@@ -63,12 +64,27 @@
         android:textColor="#575757"
         android:textSize="14sp"
         android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvsend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tvDateFail"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="5dp"
+        android:layout_toStartOf="@+id/imageView"
+        android:text="Message"
+        android:textColor="#575757"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tvMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvDateFail"
+        android:layout_below="@+id/tvsend"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="10dp"
@@ -79,6 +95,7 @@
         android:textColor="#0B0B0B"
         android:textSize="14sp"
         android:textStyle="bold" />
+
 
     <ImageView
         android:id="@+id/imageView"

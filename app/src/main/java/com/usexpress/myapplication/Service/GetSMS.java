@@ -56,7 +56,7 @@ public class GetSMS {
                     for (int i = 0; i < DataSetting.arraySMSMain.size(); i++) {
                         if(phone.contains(DataSetting.arraySMSMain.get(i).phone)&& cursor.getLong(dateSMS) > DataSetting.arraySMSMain.get(i).getDateStart().getTime() ){
                             if(checkSMS(DataSetting.arraySMSMain.get(i).arrSMS,id)){
-                                DataSetting.arraySMSMain.get(i).arrSMS.add(new ItemModel(id,phone,body,date,"Chưa gửi api",false));
+                                DataSetting.arraySMSMain.get(i).arrSMS.add(new ItemModel(id,phone,body,date,"Chưa gửi api",false,0));
                                 Log.d("phone:", phone);
                                 Log.d("body", body);
                                 Log.d("date", date);
