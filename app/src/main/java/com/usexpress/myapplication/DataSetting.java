@@ -15,7 +15,9 @@ import com.usexpress.myapplication.Model.MainSMS;
 import com.usexpress.myapplication.Model.SMSModel;
 import com.usexpress.myapplication.Model.TokenModel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import xdroid.toaster.Toaster;
@@ -105,5 +107,27 @@ public class DataSetting {
             Log.e("Error send SMS ",""+e);
             return -1;
         }
+    }
+
+
+    public boolean isAnswerTime(String start,String end){
+        try{
+            if(start!= null && end !=null){
+                if(start.equals(end)){
+                    return true;
+                }
+                SimpleDateFormat formatter = new SimpleDateFormat("HH");
+                Date date = new Date();
+                String dateNow = formatter.format(date);
+                Log.d("check time: ","      "+dateNow);
+                if (Integer.parseInt(dateNow)>=Integer.parseInt(start) && Integer.parseInt(dateNow) <=Integer.parseInt(end)) {
+                    Log.d("check time: ","   OK   "+dateNow);
+                    return true;
+                }
+            }
+        }catch (Exception e){
+            Log.d("check time: ","    ERROR  ");
+        }
+        return false;
     }
 }

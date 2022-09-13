@@ -51,7 +51,7 @@ public class GetSMS {
                 final long id = cursor.getLong(idIndex);
                 final String phone = cursor.getString(nameIndex);
                 final String body = cursor.getString(descriptionIndex);
-                final String date = DateFormat.format("HH:mm:ss dd/MM/yyyy", new Date(cursor.getLong(dateSMS))).toString();
+                final String date = DateFormat.format("dd/MM/yyyy", new Date(cursor.getLong(dateSMS))).toString();
                 if (checkData()) {
                     for (int i = 0; i < DataSetting.arraySMSMain.size(); i++) {
                         if(phone.contains(DataSetting.arraySMSMain.get(i).phone)&& cursor.getLong(dateSMS) > DataSetting.arraySMSMain.get(i).getDateStart().getTime() ){

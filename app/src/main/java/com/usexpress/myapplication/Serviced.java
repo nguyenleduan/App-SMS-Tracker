@@ -118,11 +118,13 @@ public class Serviced extends Service {
                     Toaster.toast("Gửi Thông tin thất bại:  ID:" + id + "  " + response.code() + " --- [Phone: " + phone + "]");
                     DataSetting.arraySMSMain.get(i).arrSMS.get(x).setDate_CallSuccessful("" + response.code());
                 }
-                if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 0 && DataSetting.arraySMSMain.get(i).isSendSMS) {
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(dataSetting.AnswerAction(phone, DataSetting.arraySMSMain.get(i).Content));
-                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 1) {
-                } else {
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(2);
+                if(dataSetting.isAnswerTime(DataSetting.arraySMSMain.get(i).timeStartTracker,DataSetting.arraySMSMain.get(i).timeEndTracker)){
+                    if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 0 && DataSetting.arraySMSMain.get(i).isSendSMS) {
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(dataSetting.AnswerAction(phone, DataSetting.arraySMSMain.get(i).Content));
+                    } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 1) {
+                    } else {
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(2);
+                    }
                 }
                 Log.d("asda", "");
                 return;
@@ -133,11 +135,13 @@ public class Serviced extends Service {
                 Log.d("--------Thất bại-------", "" + t);
                 Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
                 DataSetting.arraySMSMain.get(i).arrSMS.get(x).setDate_CallSuccessful("Api: ERROR");
-                if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 0 && DataSetting.arraySMSMain.get(i).isSendSMS) {
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(dataSetting.AnswerAction(phone, DataSetting.arraySMSMain.get(i).Content));
-                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 1) {
-                } else {
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(2);
+                if(dataSetting.isAnswerTime(DataSetting.arraySMSMain.get(i).timeStartTracker,DataSetting.arraySMSMain.get(i).timeEndTracker)){
+                    if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 0 && DataSetting.arraySMSMain.get(i).isSendSMS) {
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(dataSetting.AnswerAction(phone, DataSetting.arraySMSMain.get(i).Content));
+                    } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(x).getAnswer() == 1) {
+                    } else {
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(x).setAnswer(2);
+                    }
                 }
             }
         });

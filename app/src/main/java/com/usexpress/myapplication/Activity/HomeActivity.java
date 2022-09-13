@@ -57,7 +57,7 @@ import xdroid.toaster.Toaster;
 public class HomeActivity extends AppCompatActivity {
 
     Intent mServiceIntent;
-    DataSetting data;
+    DataSetting data = new DataSetting();
     static String myPhoneNumber = "";
     public ListView lv;
     public Context context = HomeActivity.this;
@@ -121,16 +121,16 @@ public class HomeActivity extends AppCompatActivity {
         btResend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toaster.toast("Đang gửi lại SMS fail");
-                ContentResolver cr = getContentResolver();
-                GetSMS getSMS = new GetSMS();
-                getSMS.readSMS(cr);
                 SendFail(true);
             }
         });
         btRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toaster.toast("Đang gửi lại SMS fail");
+                ContentResolver cr = getContentResolver();
+                GetSMS getSMS = new GetSMS();
+                getSMS.readSMS(cr);
                 adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview,
                         sortList(addList()));
                 lv.setAdapter(adapterListView);
@@ -248,23 +248,28 @@ public class HomeActivity extends AppCompatActivity {
                     lv.setAdapter(adapterListView);
                     adapterListView.notifyDataSetChanged();
                 }
-                if(DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 0  && DataSetting.arraySMSMain.get(i).isSendSMS){
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(data.AnswerAction(phone,content));
-                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 1) {
-                }else{
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(2);
+                if(data.isAnswerTime(DataSetting.arraySMSMain.get(i).timeStartTracker,DataSetting.arraySMSMain.get(i).timeEndTracker)){
+                    if(DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 0  && DataSetting.arraySMSMain.get(i).isSendSMS){
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(data.AnswerAction(phone,content));
+                    } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 1) {
+                    }else{
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(2);
+                    }
                 }
+                return;
             }
             @Override
             public void onFailure(Call<Boolean> call, Throwable t) {
                 Log.d("--------Thất bại-------", "" + t);
                 Toaster.toast("Gửi Thông tin thất bại: ID: " + id + "  [Phone: " + phone + "]");
                 DataSetting.arraySMSMain.get(i).arrSMS.get(y).setDate_CallSuccessful("Api: ERROR");
-                if(DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 0  && DataSetting.arraySMSMain.get(i).isSendSMS){
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(data.AnswerAction(phone,content));
-                } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 1) {
-                } else{
-                    DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(2);
+                if(data.isAnswerTime(DataSetting.arraySMSMain.get(i).timeStartTracker,DataSetting.arraySMSMain.get(i).timeEndTracker)){
+                    if(DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 0  && DataSetting.arraySMSMain.get(i).isSendSMS){
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(data.AnswerAction(phone,content));
+                    } else if (DataSetting.arraySMSMain.get(i).arrSMS.get(y).getAnswer() == 1) {
+                    } else{
+                        DataSetting.arraySMSMain.get(i).arrSMS.get(y).setAnswer(2);
+                    }
                 }
                 if (load) {
                     adapterListView = new AdapterListView(HomeActivity.this, R.layout.item_listfail_listview, sortList(addList()));
@@ -281,33 +286,33 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    void DialogS(String s) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
-        builder.setMessage(s).setTitle("Error Login")
-                .setCancelable(false)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        //do things
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
-    }
-
-    private void GetDomainAndUrl(String s) {
-        String url = "";
-        String[] parts = s.split("/");
-        for (int i = 0; i < parts.length - 1; i++) {
-            if (i == 0) {
-                url = url + parts[i];
-            } else {
-
-                url = url + "/" + parts[i];
-            }
-        }
-        data.DoMain = url + "/";
-        data.UrlApi = parts[parts.length - 1];
-    }
+//    void DialogS(String s) {
+//        AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+//        builder.setMessage(s).setTitle("Error Login")
+//                .setCancelable(false)
+//                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        //do things
+//                    }
+//                });
+//        AlertDialog alert = builder.create();
+//        alert.show();
+//    }
+//
+//    private void GetDomainAndUrl(String s) {
+//        String url = "";
+//        String[] parts = s.split("/");
+//        for (int i = 0; i < parts.length - 1; i++) {
+//            if (i == 0) {
+//                url = url + parts[i];
+//            } else {
+//
+//                url = url + "/" + parts[i];
+//            }
+//        }
+//        data.DoMain = url + "/";
+//        data.UrlApi = parts[parts.length - 1];
+//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

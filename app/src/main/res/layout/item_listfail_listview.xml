@@ -33,27 +33,10 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/tvDateSuccess"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tvAlowPhone23"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="5dp"
-        android:layout_toStartOf="@+id/imageView"
-        android:text="Message"
-        android:textColor="#575757"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-
-    <TextView
         android:id="@+id/tvDateFail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvDateSuccess"
+        android:layout_below="@+id/tvAlowPhone"
         android:layout_alignParentStart="true"
         android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
@@ -81,7 +64,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/tvMessage"
+        android:id="@+id/tvBody"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tvsend"
@@ -92,7 +75,7 @@
         android:layout_marginEnd="10dp"
         android:layout_marginBottom="5dp"
         android:text="Message"
-        android:textColor="#0B0B0B"
+        android:textColor="#393838"
         android:textSize="14sp"
         android:textStyle="bold" />
 

@@ -123,9 +123,9 @@ public class SettingAppActivity extends AppCompatActivity {
     }
     private void setValue(){
         if(index == -2){
-            edtPhone.setText("Custom phone");
+            edtPhone.setText("Phone");
             edtTimeStart.setText("0");
-            edtTimeEdt.setText("0");
+            edtTimeEdt.setText("23");
             edtDate.setText("30/12/2021");
             SAnswer.setChecked(false);
         }else{

@@ -62,29 +62,36 @@
                 android:layout_marginEnd="0dp"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="200dp"
-                    android:layout_height="50dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_weight="1"
-                    android:gravity="center|fill"
-                    android:text="Time delay:"
-                    android:textColor="#090707"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/edtTimeDelay"
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="5dp"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:gravity="center|fill"
-                    android:hint="Thời gian phút"
-                    android:inputType="textPersonName"
-                    android:textSize="16sp" />
+                    android:layout_height="match_parent">
 
+
+                    <TextView
+                        android:id="@+id/textView7"
+                        android:layout_width="wrap_content"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:gravity="center|fill"
+                        android:text="Time read(s):"
+                        android:textColor="#090707"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <EditText
+                        android:id="@+id/edtTimeDelay"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:gravity="center|fill"
+                        android:hint="Thời gian phút"
+                        android:inputType="textPersonName"
+                        android:textSize="16sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/textView7" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </LinearLayout>
 
             <LinearLayout

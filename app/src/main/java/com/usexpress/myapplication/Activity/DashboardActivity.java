@@ -56,7 +56,6 @@ public class DashboardActivity extends AppCompatActivity {
         btSaveTime = findViewById(R.id.btSaveTime);
         lv.setScrollContainer(false);
         addDate();
-
         askPermissionAndSendSMS();
         Log.d("asdasd","asdasd" + list.size());
         edtTimeDelay.setText(DataSetting.TimeDelay+"");
